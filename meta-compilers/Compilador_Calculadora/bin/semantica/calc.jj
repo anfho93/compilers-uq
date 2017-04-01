@@ -1,0 +1,148 @@
+options {
+LOOKAHEAD=1;
+}
+PARSER_BEGIN(Calculadora)
+public class Calculadora {
+	public static void main(String args[]) throws ParseException, TokenMgrError{
+		Calculadora parser = new Calculadora(System.in);
+		while (true) {
+			System.out.print("Introduzca una expresion: ");
+			System.out.flush();
+			try {
+				switch (parser.one_line()) {
+					case -1:
+						System.exit(0);
+					default:
+						break;
+				}
+			}
+			catch (ParseException x) {
+				System.out.println("Finalizando.");
+				throw x;
+			}
+		}
+	}
+}
+PARSER_END(Calculadora)
+
+SKIP : { " " | "\r" | "\t" }
+
+TOKEN :
+{
+< EOL: "\n" >
+}
+TOKEN : /* OPERADORES */
+{
+	<MAS: "+" >
+	|
+	< MENOS: "-" >
+	|
+	< POR: "*" >
+	|
+	< ENTRE: "/" >
+	| <IGUAL: "=">
+}
+
+TOKEN :
+{
+	< CONSTANTE: ( <DIGITO> )+ > | < #DIGITO: ["0" - "9"] >
+}
+
+TOKEN :
+{
+	<VARIABLE: <LETRA>>
+	|
+	<#LETRA:["A"-"Z"]>
+}
+
+int one_line() :
+{
+	int resultado;
+}
+{
+	LOOKAHEAD(2)
+	resultado=suma(){System.out.println("El resultado es: "+resultado);}
+		<EOL>{ return 1; }
+		| decl_var() <EOL>{return 0;}
+		| <EOL>{ return 0; }
+		| <EOF>
+	{ return -1; }
+}
+
+int suma() :
+{
+	int resultado;
+	int aux; 
+}
+{
+	resultado=termino()
+	( <MAS> aux=termino(){resultado=resultado+aux;}
+	| <MENOS> aux=termino(){resultado=resultado-aux;}
+	)*
+	{return resultado;}
+}
+int termino() :
+	{ int resultado;
+	int aux;}
+{
+	resultado=unario()
+		( 	<POR> aux=unario(){resultado=resultado*aux;}
+			| <ENTRE> aux=unario(){resultado=resultado/aux;}
+		)*
+{return resultado;}
+}
+
+
+int unario() :
+{
+	int resultado;
+}
+{
+	(
+		<MENOS> resultado=elemento(){resultado=0-resultado;}
+		|	resultado=elemento()
+	)
+	{
+		return resultado;
+	}
+}
+
+
+int elemento() :
+	{
+		Integer valor;
+		int resultado;
+		Character aux;
+	}
+{
+	( <CONSTANTE>
+		{	valor=new Integer(token.image);
+			resultado=valor.intValue();
+		}
+	  | <VARIABLE>
+		{   aux=new Character(token.image.charAt(0));
+			resultado=valorDeLaVariable(aux);
+		}
+	  | "(" resultado=suma() ")"
+	)
+	{
+		return resultado;
+	}
+}
+
+
+void decl_var() :
+{	Integer valor;
+	Character indice;
+}
+{
+	<VARIABLE>{indice=new Character(token.image.charAt(0));}
+	<IGUAL>
+	<CONSTANTE>{valor=new Integer(token.image);}
+	{insertaValor(indice,valor);}
+	|
+	<VARIABLE>{indice=new Character(token.image.charAt(0));}
+	<IGUAL >
+	valor=suma();
+	{insertaValor(indice,valor);}
+}

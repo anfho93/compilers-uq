@@ -1,0 +1,90 @@
+options {
+LOOKAHEAD=1;
+}
+PARSER_BEGIN(Calculadora)
+public class Calculadora {
+	public static void main(String args[]) throws ParseException, TokenMgrError{
+		Calc1 parser = new Calc1(System.in);
+		while (true) {
+			System.out.print("Introduzca una expresion: ");
+			System.out.flush();
+			try {
+				switch (parser.one_line()) {
+					case -1:
+						System.exit(0);
+					default:
+						break;
+				}
+			}
+			catch (ParseException x) {
+				System.out.println("Finalizando.");
+				throw x;
+			}
+		}
+	}
+}
+PARSER_END(Calculadora)
+
+SKIP : { " " | "\r" | "\t" }
+
+TOKEN :
+{
+< EOL: "\n" >
+}
+TOKEN : /* OPERADORES */
+{
+	<MAS: "+" >
+	|
+	< MENOS: "-" >
+	|
+	< POR: "*" >
+	|
+	< ENTRE: "/" >
+	| <IGUAL: "=">
+}
+
+TOKEN :
+{
+	< CONSTANTE: ( <DIGITO> )+ > | < #DIGITO: ["0" - "9"] >
+}
+
+TOKEN :
+{
+	<VARIABLE: <LETRA>>
+	|
+	<#LETRA:["A"-"Z"]>
+}
+
+void suma() :
+{
+ 	 }
+{
+	termino() (( <MAS> | <MENOS> ) termino())*
+}
+void termino() :
+{ }
+{
+	unario() (( <POR> | <ENTRE> ) unario())*
+}
+void unario() :
+{ }
+{
+	<MENOS> elemento()	|  elemento()
+}
+void elemento() :
+{}
+{
+	<CONSTANTE>	| "(" suma() ")"
+}
+
+
+
+int one_line() :
+{	
+}
+{
+	LOOKAHEAD(2)
+	suma()<EOL> { return 1; }
+		| <EOL> { return 0; }
+		| <EOF>	{ return -1; }
+}

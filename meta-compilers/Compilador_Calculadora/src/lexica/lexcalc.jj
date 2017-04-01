@@ -1,0 +1,79 @@
+options {
+LOOKAHEAD=1;
+}
+PARSER_BEGIN(Calculadora)
+package lexica;
+public class Calculadora {
+// ESTE PROCESO ESTA TERMINDO COMO ANALIZADOR LEXICO
+// COMO ACTIVIDAD AGREGAR FUNCIONALIDADES DE LOGARITMOS SENOS COCENOS ETC
+//Y AGREGAR NUMEROS REALES
+	public static void main(String args[]) throws ParseException, TokenMgrError{
+		Calculadora parser = new Calculadora(System.in);
+		while (true) {
+			System.out.print("Introduzca una expresion: ");
+			System.out.flush();
+			try {
+				switch (parser.one_line()) {
+					case -1:
+						System.exit(0);
+					default:
+						break;
+				}
+			}
+			catch (ParseException x) {
+				System.out.println("Finalizando.");
+				throw x;
+			}
+		}
+	}
+}
+PARSER_END(Calculadora)
+
+SKIP : { " " | "\r" | "\t" }
+
+TOKEN :
+{
+< EOL: "\n" >
+}
+TOKEN : /* OPERADORES */
+{
+	<MAS: "+" >
+	|
+	< MENOS: "-" >
+	|
+	< POR: "*" >
+	|
+	< ENTRE: "/" >
+	| <IGUAL: "=">
+}
+
+TOKEN :
+{
+	< CONSTANTE: ( <DIGITO> )+ > | < #DIGITO: ["0" - "9"] >
+}
+
+TOKEN :
+{
+	<VARIABLE: <LETRA>>
+	|
+	<#LETRA:["A"-"Z"]>
+}
+
+int one_line() :
+{
+	
+}
+{
+  	try { 
+		(<MAS> | <MENOS> | <POR>  | <ENTRE> | <CONSTANTE> | <VARIABLE> | <IGUAL>  | <EOL> | <EOF>)+
+	}
+	catch(Error e) {
+		//ParseException e = generateParseException(); // se genera el objeto excepción
+		System.out.println(e.toString()); // se imprime el mensaje de error
+		Token t;
+		do {
+		t = getNextToken();
+		} while (t.kind != EOL);
+	}
+	{return 0;}
+}
